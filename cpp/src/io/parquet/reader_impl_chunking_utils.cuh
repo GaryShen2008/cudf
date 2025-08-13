@@ -228,11 +228,18 @@ void detect_malformed_pages(device_span<PageInfo const> pages,
                             rmm::cuda_stream_view stream);
 
 /**
+ * @brief Computes the per-page scratch space required for decompression.
+ */
+rmm::device_uvector<size_t> compute_decompression_scratch_sizes(
+  device_span<ColumnChunkDesc const> chunks,
+  device_span<PageInfo const> pages,
+  rmm::cuda_stream_view stream);
+
+/**
  * @brief Add the cost of decompression codec scratch space to the per-page cumulative
  * size information
  */
-void include_decompression_scratch_size(device_span<ColumnChunkDesc const> chunks,
-                                        device_span<PageInfo const> pages,
+void include_decompression_scratch_size(device_span<size_t const> pages,
                                         device_span<cumulative_page_info> c_info,
                                         rmm::cuda_stream_view stream);
 
@@ -374,6 +381,9 @@ struct decomp_sum {
   __device__ inline decompression_info operator()(decompression_info const& a,
                                                   decompression_info const& b) const
   {
+    // Ignore uncompressed blocks: if either a or b is uncompressed, return the other
+    if (a.type == compression_type::NONE and b.type != compression_type::NONE) return b;
+    if (b.type == compression_type::NONE and a.type != compression_type::NONE) return a;
     return {a.type,
             a.num_pages + b.num_pages,
             cuda::std::max(a.max_page_decompressed_size, b.max_page_decompressed_size),
