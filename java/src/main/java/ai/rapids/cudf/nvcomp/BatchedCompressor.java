@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024, NVIDIA CORPORATION.
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -81,7 +81,7 @@ public abstract class BatchedCompressor {
             outputChunkAddrs);
 
         final long tempBufferSize = batchedCompressGetTempSize(numChunks, chunkSize,
-          numChunks * chunkSize);
+          numChunks * chunkSize, stream);
         try (DeviceMemoryBuffer addrsAndSizes = putAddrsAndSizesOnDevice(inputChunkAddrs,
                 inputChunkSizes, outputChunkAddrs, stream);
              DeviceMemoryBuffer tempBuffer =
@@ -299,10 +299,11 @@ public abstract class BatchedCompressor {
    * @param batchSize number of chunks in the batch
    * @param maxChunkSize maximum size of an uncompressed chunk in bytes
    * @param totalSize Upper bound on the total uncompressed size of all chunks
+   * @param stream CUDA stream associated with the operation
    * @return The size of required temporary workspace in bytes to compress the batch.
    */
   protected abstract long batchedCompressGetTempSize(long batchSize, long maxChunkSize,
-    long totalSize);
+    long totalSize, Cuda.Stream stream);
 
    /**
    * Asynchronously compress a batch of buffers. Note that compressedSizesOutPtr must

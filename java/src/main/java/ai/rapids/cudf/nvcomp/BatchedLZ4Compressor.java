@@ -1,9 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2026, NVIDIA CORPORATION.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package ai.rapids.cudf.nvcomp;
+
+import ai.rapids.cudf.Cuda;
 
 /** Multi-buffer LZ4 compressor */
 public class BatchedLZ4Compressor extends BatchedCompressor {
@@ -21,8 +23,10 @@ public class BatchedLZ4Compressor extends BatchedCompressor {
   }
 
   @Override
-  protected long batchedCompressGetTempSize(long batchSize, long maxChunkSize, long totalSize) {
-    return NvcompJni.batchedLZ4CompressGetTempSize(batchSize, maxChunkSize, totalSize);
+  protected long batchedCompressGetTempSize(long batchSize, long maxChunkSize, long totalSize,
+      Cuda.Stream stream) {
+    return NvcompJni.batchedLZ4CompressGetTempSize(batchSize, maxChunkSize, totalSize,
+        stream.getStream());
   }
 
   @Override
